@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -29,6 +30,7 @@ class LoginCubit extends Cubit<LoginStates>
     });
   }
 
+  // =======================================================================
 
   // SignIn with Google
   final googleSignIn = GoogleSignIn();
@@ -49,6 +51,15 @@ class LoginCubit extends Cubit<LoginStates>
 
     await FirebaseAuth.instance.signInWithCredential(credential).then((value)
     {
+      var user = FirebaseAuth.instance.currentUser;
+      createUser(
+          {
+            'name' : user?.displayName,
+            'email' : user?.email,
+            'phone' : user?.phoneNumber,
+            'photo' : user?.photoURL,
+            'uId' : user?.uid,
+          });
       emit(LoginSuccessState(value.user!.uid));
       //emit(LoginWithGoogleSuccessState());
     }).catchError((error)
@@ -57,6 +68,13 @@ class LoginCubit extends Cubit<LoginStates>
     });
 
   }
+  FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  void createUser(Map<String, dynamic> data)
+  {
+    _firestore.collection('users').doc(data['uId']).set(data);
+  }
+
+  // ================================================================
 
   IconData suffix = Icons.visibility_off_outlined;
   bool isPasswordShown = true;
